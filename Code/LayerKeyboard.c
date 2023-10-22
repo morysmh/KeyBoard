@@ -1,0 +1,43 @@
+#include "define.h"
+#include "keyboard.h"
+#include "PC_keyboard.h"
+
+volatile uint8_t Layer1[Keys_Count*2+1][3] = 
+{
+{1,HID_KEY_Q,0},
+{2,HID_KEY_W,0},
+{3,HID_KEY_E,0},
+{4,HID_KEY_R,0},
+{5,HID_KEY_T,0},
+{6,HID_KEY_A,0},
+{7,HID_KEY_S,0},
+{8,HID_KEY_D,0},
+{9,HID_KEY_F,0},
+{10,HID_KEY_G,0},
+{11,HID_KEY_Z,0},
+{12,HID_KEY_X,0},
+{13,HID_KEY_C,0},
+{14,HID_KEY_V,0},
+{15,HID_KEY_B,0},
+{16,HID_KEY_SPACE,0},
+{17,HID_KEY_ENTER,0},
+{18,HID_KEY_BACKSPACE,0},
+{19,HID_KEY_P,0},
+{20,HID_KEY_O,0},
+{21,HID_KEY_I,0},
+{22,HID_KEY_U,0},
+{23,HID_KEY_Y,0},
+{24,HID_KEY_SEMICOLON,0},
+{25,HID_KEY_L,0},
+{26,HID_KEY_K,0},
+{27,HID_KEY_J,0},
+{28,HID_KEY_H,0},
+{29,HID_KEY_SLASH,0},
+{30,HID_KEY_PERIOD,0},
+{31,HID_KEY_COMMA,0},
+{32,HID_KEY_M,0},
+{33,HID_KEY_N,0},
+{34,HID_KEY_SHIFT_LEFT,0},
+{35,HID_KEY_ALT_LEFT,0},
+{36,HID_KEY_TAB,0},
+};

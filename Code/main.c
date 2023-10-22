@@ -26,8 +26,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "define.h"
+#include "keyboard.h"
+#include "PC_keyboard.h"
 
-#include "pico/stdlib.h"
 
 /* This MIDI example send sequence of note (on/off) repeatedly. To test on PC, you need to install
  * synth software and midi connection management software. On
@@ -40,33 +42,27 @@
 // MACRO CONSTANT TYPEDEF PROTYPES
 //--------------------------------------------------------------------+
 
+
 /* Blink pattern
  * - 250 ms  : device not mounted
  * - 1000 ms : device mounted
  * - 2500 ms : device is suspended
  */
 
+volatile ringBuff senddat ={};
+volatile uint8_t senddatabuffer[45] = {};
+volatile LED_Interval pico_led={},r_led={},g_led={},b_led={};
+
 #define Led_Pin_PICO 25
 #define PICO_LED_Stat(x) gpio_put(Led_Pin_PICO, x)
+#define R_LED_Stat(x)    gpio_put(Pin_LED_R,x);
+#define B_LED_Stat(x)    gpio_put(Pin_LED_B,x);
+#define G_LED_Stat(x)    gpio_put(Pin_LED_G,x);
 
+void chagneLED(volatile LED_Interval *led);
+void led_blinking_task(void);
 
 void Board_pin_Config();
-void KeyPadPin();
-typedef struct
-{
-    uint64_t OFF;
-    uint64_t _ON;
-    uint64_t lastcheckmili;
-    uint8_t stat;
-} LED_Interval;
-
-enum  {
-  BLINK_NOT_MOUNTED = 250,
-  BLINK_MOUNTED = 1000,
-  BLINK_SUSPENDED = 2500,
-};
-
-volatile LED_Interval Pico_LED;
 
 
 /*------------- MAIN -------------*/
@@ -74,14 +70,27 @@ int main(void)
 {
   Board_pin_Config();
   stdio_init_all();
+  init_keyboard();
+  pico_led.OFF = 200000;
+  pico_led._ON = 400000;
+  r_led._ON = 1;
+  r_led.OFF = 400000;
+  g_led._ON = 1;
+  g_led.OFF = 40000000;
+  b_led._ON = 1;
+  b_led.OFF = 40000000;
+  senddat.buffer = (uint8_t *)senddatabuffer;
+  senddat.max_size = 40;
 
-  Pico_LED.OFF = 500000;
-  Pico_LED._ON = 350000;
-  Pico_LED.lastcheckmili = 0;
-  Pico_LED.stat = 0;
+  tusb_init();
 
   while (1)
   {
+    tud_task(); // tinyusb device task
+    led_blinking_task();
+
+    hid_task();
+    keyboard_hander();
   }
 
 
@@ -92,6 +101,65 @@ void Board_pin_Config()
 {
     gpio_init(Led_Pin_PICO);
     gpio_set_dir(Led_Pin_PICO, GPIO_OUT);
+    for(int i=0;i<=2;i++)
+    {
+      gpio_init(i);
+      gpio_set_dir(i, GPIO_OUT);
+    }
+    for(int i=6;i<=22;i++)
+    {
+      gpio_init(i);
+      gpio_set_dir(i, GPIO_IN);
+      gpio_set_pulls(i,1,0);
+    }
+      gpio_init(Pin_Key9);
+      gpio_set_dir(Pin_Key9, GPIO_IN);
+      gpio_set_pulls(Pin_Key9,1,0);
+
+      gpio_init(Pin_AD2);
+      gpio_set_dir(Pin_AD2, GPIO_IN);
+      gpio_set_pulls(Pin_AD2,1,0);
+      gpio_init(Pin_AD3);
+      gpio_set_dir(Pin_AD3, GPIO_IN);
+      gpio_set_pulls(Pin_AD3,1,0);
+}
 
 
+
+
+//--------------------------------------------------------------------+
+// BLINKING TASK
+//--------------------------------------------------------------------+
+void led_blinking_task(void)
+{
+  chagneLED(&pico_led);
+  PICO_LED_Stat(pico_led.stat);
+
+  chagneLED(&r_led);
+  R_LED_Stat(!r_led.stat);
+
+  chagneLED(&g_led);
+  G_LED_Stat(!g_led.stat);
+
+  chagneLED(&b_led);
+  B_LED_Stat(!b_led.stat);
+}
+
+
+void chagneLED(volatile LED_Interval *led)
+{
+    if (led->lastCheck > time_us_64())
+    {
+        return;
+    }
+    if (led->stat)
+    {
+        led->lastCheck = time_us_64() + led->OFF;
+        led->stat = 0;
+    }
+    else
+    {
+        led->lastCheck = time_us_64() + led->_ON;
+        led->stat = 1;
+    }
 }
