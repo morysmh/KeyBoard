@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}
 	keyboard.c
 	PC_keyboard.c
 	LayerKeyboard.c
+	USART_keyboard.c
 	)
 
 pico_add_extra_outputs(${PROJECT_NAME})

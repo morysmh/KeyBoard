@@ -4,16 +4,18 @@
 extern volatile uint8_t Layer1[][3];
 volatile KeyObject keystamp[200];
 volatile ringBuff r_stmp = {};
+volatile uint8_t r__usbEN = 1;
 void keyboard_hander()
 {
     readkey();
     key_translate();
 }
-void init_keyboard()
+void init_keyboard(uint8_t i_usbEN)
 {
     r_stmp.max_size = 190;
     r_stmp.head = 0;
     r_stmp.tail = 0;
+    r__usbEN = i_usbEN;
 }
 
 void readkey()
@@ -57,16 +59,26 @@ void readkey()
         if(a_last_time[i] < time_us_64())
         {
             a_lastState[i] = gpio_get(c_keys[i]);
-            settimestamp(correspondKey(c_keys[i]),a_lastState[i]);
+            settimestamp(c_keys[i],a_lastState[i]);
         }
     }
 }
 void settimestamp(uint8_t key,uint8_t key_status)
 {
-    keystamp[r_stmp.head].keyvalue = key;
+    keyboard_uart keydata;
+    keystamp[r_stmp.head].keyvalue = correspondKey(key);
     keystamp[r_stmp.head].t_time = time_us_64();
     keystamp[r_stmp.head].stat = !key_status;
-    ringbuff_plus_one_head(&r_stmp);
+    if(r__usbEN)
+        ringbuff_plus_one_head(&r_stmp);
+    else
+    {
+        keydata.command = kb_RELEASE_KEY;
+        if(keystamp[r_stmp.head].stat)
+            keydata.command = kb_PRESS_KEY;
+        keydata.data = correspondKey(key + 128);
+        uh_encode(keydata);
+    }
 }
 void key_translate()
 {
@@ -165,6 +177,6 @@ uint8_t correspondKey(uint8_t key)
         }
     }
     if(r_otherHand)
-        r_ret += Keys_Count;
-    return r_ret;
+        return key;
+    return r_ret + Keys_Count;
 }

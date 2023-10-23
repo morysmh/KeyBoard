@@ -3,6 +3,8 @@
 
 #include "define.h"
 #include "PC_keyboard.h"
+#include "USART_keyboard.h"
+
 #define NORMAL_PRESS    0
 #define LONG_PRESS      1
 #define DOUBLE_PRESS    2
@@ -16,7 +18,7 @@ typedef struct
     uint32_t keyvalue;
 } KeyObject;
 void keyboard_hander();
-void init_keyboard();
+void init_keyboard(uint8_t i_usbEN);
 
 uint8_t correspondKey(uint8_t key);
 void readkey();
