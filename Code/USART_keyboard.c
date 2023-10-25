@@ -194,13 +194,13 @@ void uh_decode(keyboard_uart data)
     switch (data.command)
     {
     case kb_PRESS_KEY:
-        settimestamp(data.data, 0);
+        settimestamp(data.data, kb_PRESS_KEY);
         break;
     case kb_RELEASE_KEY:
-        settimestamp(data.data, 1);
+        settimestamp(data.data, kb_RELEASE_KEY);
         break;
     case kb_RELEASE_ALL:
-        //settimestamp(0, 3);
+        settimestamp(1, kb_RELEASE_ALL);
         break;
     default:
         break;

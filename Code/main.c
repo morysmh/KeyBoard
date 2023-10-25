@@ -79,6 +79,7 @@ int main(void)
   stdio_init_all();
   init_keyboard(c_usbEN);
   Usart_init_main();
+  init_PC_keyboard();
   volatile uint8_t r_crc = 0;
   pico_led.OFF = 200000;
   pico_led._ON = 400000;

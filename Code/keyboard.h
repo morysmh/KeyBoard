@@ -16,6 +16,7 @@ typedef struct
     uint64_t t_time;
     uint8_t stat;
     uint32_t keyvalue;
+    uint8_t charValue;
 } KeyObject;
 void keyboard_hander();
 void init_keyboard(uint8_t i_usbEN);

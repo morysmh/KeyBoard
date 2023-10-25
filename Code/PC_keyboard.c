@@ -1,9 +1,12 @@
 #include "PC_keyboard.h"
 
 extern volatile LED_Interval pico_led;
+//static volatile uint8_t r_allKey[10] = {};
+const uint8_t c_max_key = 6;
+static volatile uint8_t r_newData = 0;
 
-extern volatile ringBuff senddat;
-extern volatile uint8_t senddatabuffer;
+volatile ringBuff rb_send = {};
+volatile uint8_t sendBuffer[21][7] ={};
 // Invoked when device is mounted
 void tud_mount_cb(void)
 {
@@ -34,23 +37,94 @@ void tud_resume_cb(void)
   pico_led.OFF = BLINK_MOUNTED;
   pico_led._ON = BLINK_MOUNTED;
 }
-
-void write_on_keyboard(uint8_t i_key)
+uint8_t deletefromString(uint8_t *i_data,uint8_t len,uint8_t key)
 {
-  senddat.buffer[senddat.head] = i_key;
-  ringbuff_plus_one_head(&senddat);
+  uint8_t last_data_index = 0;
+  uint8_t r_ret = 0;
+  for(uint i=0;i<len;i++)
+  {
+    if(i_data[i] == key)
+    {
+      i_data[i] = HID_KEY_NONE;
+      r_ret++;
+      break;
+    }
+  }
+  for(uint i=0;i<(len - 1);i++)
+  {
+    if(i_data[i] == HID_KEY_NONE)
+    {
+      i_data[i] = i_data[i+1];
+      i_data[i+1] = HID_KEY_NONE;
+    }
+  }
+  return r_ret;
+}
+uint8_t check_if_system_key(uint8_t i_key)
+{
+  uint8_t controll_keys[] = {
+  HID_KEY_CONTROL_LEFT,
+  HID_KEY_SHIFT_LEFT,
+  HID_KEY_ALT_LEFT,
+  HID_KEY_GUI_LEFT,
+  HID_KEY_CONTROL_RIGHT,
+  HID_KEY_SHIFT_RIGHT,
+  HID_KEY_ALT_RIGHT,
+  HID_KEY_GUI_RIGHT,
+  0};
+  uint8_t i = 0;
+  for(uint i = 0;i<(sizeof(controll_keys)/sizeof(uint8_t));i++)
+  {
+    if(i_key == controll_keys[i])
+      return 1;
+  }
+  return 0;
+}
+void init_PC_keyboard()
+{
+  rb_send.max_size = 20;
+  rb_send.tail = 0;
+  rb_send.head = 0;
+}
+void write_on_keyboard(uint8_t i_key,uint8_t i_press_or_release)
+{
+  //r_newData = 1; 
+  static volatile uint8_t r_allKey[10] = {};
+  static volatile uint32_t r_tmp = 0;
+  static volatile uint8_t r_indx = 0;
+  if(i_press_or_release == kb_RELEASE_KEY)
+  {
+    deletefromString((uint8_t *)r_allKey,c_max_key,i_key);
+    if((check_if_system_key(i_key)) && (r_indx)) 
+      r_indx--;
+  }
+  if(i_press_or_release == kb_PRESS_KEY)
+  {
+    r_allKey[r_indx] = i_key;
+    if((check_if_system_key(i_key)) && (r_indx < 6)) 
+      r_indx++;
+  }
+  if(i_press_or_release == kb_RELEASE_ALL)
+  {
+   r_indx = 0;
+    for(uint i = 0;i<c_max_key;i++)
+      r_allKey[0] = HID_KEY_NONE;
+  }
+  for(uint i = 0;i<6;i++)
+    sendBuffer[rb_send.head][i] = r_allKey[i];
+  ringbuff_plus_one_head(&rb_send);
+  r_tmp = i_key;
+  return;
 }
 //--------------------------------------------------------------------+
 // USB HID
 //--------------------------------------------------------------------+
 
-static void send_hid_report(uint8_t report_id, uint32_t btn)
+static void send_hid_report(uint8_t report_id, uint8_t  *keycode)
 {
   // skip if hid is not ready yet
   if (!tud_hid_ready())
     return;
-  uint8_t keycode[6] = {0};
-  keycode[0] = btn;
 
   tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keycode);
 }
@@ -92,21 +166,16 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint8_t
 void send_if_data_available()
 {
   static volatile uint8_t r_none_send = 0;
-  if((senddat.head == senddat.tail) && (r_none_send == 0))
+  uint8_t r_sendData[8] = {};
+  if(rb_send.head == rb_send.tail)
     return;
   if (!tud_hid_ready())
     return;
-  if(senddat.head == senddat.tail)
-    return;
-  //if(senddat.head == senddat.tail)
-  //{
-  //  send_hid_report(REPORT_ID_KEYBOARD, 0);
-  //  r_none_send = 0;
-  //  return;
-  //}
-  //r_none_send = 1;
-  send_hid_report(REPORT_ID_KEYBOARD, senddat.buffer[senddat.tail]);
-  ringbuff_tail_plus_one(&senddat);
+
+  for(uint i = 0;i<c_max_key;i++)
+    r_sendData[i] = sendBuffer[rb_send.tail][i];
+  ringbuff_tail_plus_one(&rb_send);
+  send_hid_report(REPORT_ID_KEYBOARD, r_sendData);
 }
 
 // Invoked when received GET_REPORT control request

@@ -45,46 +45,93 @@ void readkey()
     const uint64_t t_bounce = 3000;
     static volatile uint64_t t_delay = 0;
     static volatile uint64_t a_last_time[Keys_Count + 5]= {};
-    static volatile uint8_t  a_lastState[Keys_Count + 5]= {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+    static volatile uint8_t  a_lastState[Keys_Count + 5]= {kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY,kb_RELEASE_KEY};
+    int8_t r_isKeyPressed = 0;
+    uint8_t r_in = 0;
     if(t_delay > time_us_64())
         return;
     t_delay = time_us_64() + 5;
     for(uint i = 0;i < Keys_Count;i++)
     {
-        if(a_lastState[i] == gpio_get(c_keys[i]))
+        if(a_lastState[i] == kb_PRESS_KEY)
+        {
+            r_isKeyPressed = 1;
+        }
+        r_in = kb_PRESS_KEY;
+        if(gpio_get(c_keys[i]) == 1)
+            r_in = kb_RELEASE_KEY;
+        if(a_lastState[i] == r_in)
         {
             a_last_time[i] = time_us_64() + t_bounce;
             continue;
         }
         if(a_last_time[i] < time_us_64())
         {
-            a_lastState[i] = gpio_get(c_keys[i]);
+            a_lastState[i] = kb_RELEASE_KEY;
+            if(gpio_get(c_keys[i]) == 0)
+            {
+                a_lastState[i] = kb_PRESS_KEY;
+                r_isKeyPressed = 1;
+            }
             settimestamp(c_keys[i],a_lastState[i]);
         }
     }
+    if(!r_isKeyPressed)
+        settimestamp(0,kb_RELEASE_ALL);
 }
 void settimestamp(uint8_t key,uint8_t key_status)
 {
     keyboard_uart keydata;
+    static volatile uint8_t r_relase_all_Send = 3;
+    if((key_status == kb_RELEASE_ALL) && (r_relase_all_Send == 3))
+        return;
+    if(key_status == kb_RELEASE_ALL)
+    {
+        if(key == 0)
+            r_relase_all_Send |= 1;
+        else
+            r_relase_all_Send |= 2;
+    }
+    if((key_status == kb_PRESS_KEY) || (key_status == kb_RELEASE_KEY))
+    {
+        if(key < 128)
+            r_relase_all_Send &= ~1;
+        else
+            r_relase_all_Send &= ~2;
+    }
+    if((key_status == kb_RELEASE_ALL) && (r_relase_all_Send != 3))
+        return;
     keystamp[r_stmp.head].keyvalue = correspondKey(key);
     keystamp[r_stmp.head].t_time = time_us_64();
-    keystamp[r_stmp.head].stat = !key_status;
+    keystamp[r_stmp.head].stat = key_status;
     if(r__usbEN)
         ringbuff_plus_one_head(&r_stmp);
     else
     {
-        keydata.command = kb_RELEASE_KEY;
-        if(keystamp[r_stmp.head].stat)
-            keydata.command = kb_PRESS_KEY;
-        keydata.data = correspondKey(key + 128);
+        keydata.command = key_status;
+        keydata.data = key + 128;
         uh_encode(keydata);
     }
+}
+uint32_t backward_search(uint32_t start)
+{
+    uint32_t r_back = start - 1;
+    if(start == 0)
+        r_back = r_stmp.max_size;
+    while (start != r_back)
+    {
+        if(keystamp[r_back].keyvalue == keystamp[start].keyvalue)
+            break;
+        r_back=((r_back == 0)?r_stmp.max_size:r_back - 1);
+    }
+    return r_back;
+    
 }
 void key_translate()
 {
     static volatile uint64_t t_delay = 0;
     uint8_t r_next = 0;
-    uint8_t r_char = 0;
+    static volatile uint32_t r_tmp =0;
     if(t_delay > time_us_64())
         return;
     t_delay = time_us_64() + 5;
@@ -92,30 +139,32 @@ void key_translate()
         return;
     r_next = r_stmp.tail + 1;
     r_next = ((r_next > r_stmp.max_size)?0:r_next);
-    if((keystamp[r_stmp.tail].stat == 0) && (r_next == r_stmp.head))
+    if(keystamp[r_stmp.tail].stat == kb_RELEASE_KEY)
     {
-        write_on_keyboard(HID_KEY_NONE);
+        r_tmp = backward_search(r_stmp.tail);
+        write_on_keyboard(keystamp[r_tmp].charValue,kb_RELEASE_KEY);
         ringbuff_tail_plus_one(&r_stmp);
         return;
     }
-    if(keystamp[r_stmp.tail].stat == 0)
+    if(keystamp[r_stmp.tail].stat == kb_RELEASE_ALL)
     {
         ringbuff_tail_plus_one(&r_stmp);
+        write_on_keyboard(0,kb_RELEASE_ALL);
         return;
     }
     if((r_next == r_stmp.head) && ((keystamp[r_stmp.tail].t_time + LONG_PRESS_TIME) < time_us_64()))
     {
-        r_char = get_char_from_layer(Layer1,keystamp[r_stmp.tail].keyvalue,LONG_PRESS);
-        if(r_char == 0)
-            r_char = get_char_from_layer(Layer1,keystamp[r_stmp.tail].keyvalue,NORMAL_PRESS);
-        write_on_keyboard(r_char);
+        keystamp[r_stmp.tail].charValue = get_char_from_layer(Layer1,keystamp[r_stmp.tail].keyvalue,LONG_PRESS);
+        if(keystamp[r_stmp.tail].charValue == 0)
+            keystamp[r_stmp.tail].charValue = get_char_from_layer(Layer1,keystamp[r_stmp.tail].keyvalue,NORMAL_PRESS);
+        write_on_keyboard(keystamp[r_stmp.tail].charValue,kb_PRESS_KEY);
         ringbuff_tail_plus_one(&r_stmp);
         return;
     }
     if(r_next != r_stmp.head)
     {
-        r_char = get_char_from_layer(Layer1,keystamp[r_stmp.tail].keyvalue,NORMAL_PRESS);
-        write_on_keyboard(r_char);
+        keystamp[r_stmp.tail].charValue = get_char_from_layer(Layer1,keystamp[r_stmp.tail].keyvalue,NORMAL_PRESS);
+        write_on_keyboard(keystamp[r_stmp.tail].charValue,kb_PRESS_KEY);
         ringbuff_tail_plus_one(&r_stmp);
         return;
     }
@@ -177,6 +226,6 @@ uint8_t correspondKey(uint8_t key)
         }
     }
     if(r_otherHand)
-        return key;
+        return r_ret;
     return r_ret + Keys_Count;
 }
