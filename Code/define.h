@@ -54,4 +54,23 @@ typedef struct
     uint8_t *buffer;
 } ringBuff;
 
+
+
+#define Software_Layer1    0xF0
+#define Software_Layer2    0xF1
+#define Software_Layer3    0xF2
+#define Software_Layer4    0xF3
+#define Software_Layer5    0xF4
+#define Software_Layer6    0xF5
+#define Software_Layer7    0xF6
+#define Software_Layer8    0xF7
+#define Software_Layer9    0xF8
+#define Software_Layer10   0xF9
+#define Software_Layer11   0xFA
+#define Software_Layer12   0xFB
+#define Software_Layer13   0xFC
+#define Software_Layer14   0xFD
+#define Software_Layer15   0xFE
+#define Software_Layer16   0xFF
+
 #endif

@@ -81,14 +81,6 @@ int main(void)
   Usart_init_main();
   init_PC_keyboard();
   volatile uint8_t r_crc = 0;
-  pico_led.OFF = 200000;
-  pico_led._ON = 400000;
-  r_led._ON = 1;
-  r_led.OFF = 400000;
-  g_led._ON = 1;
-  g_led.OFF = 40000000;
-  b_led._ON = 1;
-  b_led.OFF = 40000000;
   senddat.buffer = (uint8_t *)senddatabuffer;
   senddat.max_size = 40;
   uh_init(uart1);

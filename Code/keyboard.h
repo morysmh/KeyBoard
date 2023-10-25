@@ -25,11 +25,12 @@ uint8_t correspondKey(uint8_t key);
 void readkey();
 void settimestamp(uint8_t key,uint8_t key_status);
 
+uint8_t change_layer(volatile uint8_t **nextLayer,uint8_t key_char);
 void key_translate();
 
 void ringbuff_tail_plus_one(volatile ringBuff * i_ring); 
 
 void ringbuff_plus_one_head(volatile ringBuff * i_ring); 
 
-uint8_t get_char_from_layer(volatile uint8_t i_layer[][3],uint8_t i_key,uint8_t i_method);
+uint8_t get_char_from_layer(volatile uint8_t *ptr,uint8_t i_key,uint8_t i_method);
 #endif

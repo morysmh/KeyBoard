@@ -1,6 +1,9 @@
 #include "PC_keyboard.h"
 
 extern volatile LED_Interval pico_led;
+extern volatile LED_Interval r_led;
+extern volatile LED_Interval g_led;
+extern volatile LED_Interval b_led;
 //static volatile uint8_t r_allKey[10] = {};
 const uint8_t c_max_key = 6;
 static volatile uint8_t r_newData = 0;
@@ -8,6 +11,18 @@ static volatile uint8_t r_newData = 0;
 volatile ringBuff rb_send = {};
 volatile uint8_t sendBuffer[21][7] ={};
 // Invoked when device is mounted
+void change_led_duty(LED_Interval *led,uint8_t duty)
+{
+  led->_ON = ((uint32_t)duty * 20000UL)/ 255UL;
+  led->OFF = ((255UL - (uint32_t)duty) * 20000UL)/ 255UL;
+}
+void kb_change_RGB(uint8_t r,uint8_t g,uint8_t b)
+{
+  change_led_duty((LED_Interval *)&r_led,r);
+  change_led_duty((LED_Interval *)&g_led,g);
+  change_led_duty((LED_Interval *)&b_led,b);
+}
+
 void tud_mount_cb(void)
 {
   pico_led.OFF = BLINK_MOUNTED;
@@ -175,6 +190,7 @@ void send_if_data_available()
   for(uint i = 0;i<c_max_key;i++)
     r_sendData[i] = sendBuffer[rb_send.tail][i];
   ringbuff_tail_plus_one(&rb_send);
+  //return;
   send_hid_report(REPORT_ID_KEYBOARD, r_sendData);
 }
 

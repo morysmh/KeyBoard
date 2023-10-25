@@ -27,4 +27,7 @@ void write_on_keyboard(uint8_t i_key,uint8_t i_press_or_release);
 
 void init_PC_keyboard();
 void send_if_data_available();
+
+void kb_change_RGB(uint8_t r,uint8_t g,uint8_t b);
+void change_led_duty(LED_Interval *led,uint8_t duty);
 #endif

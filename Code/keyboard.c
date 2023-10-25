@@ -2,9 +2,11 @@
 #include "PC_keyboard.h"
 
 extern volatile uint8_t Layer1[][3];
+extern volatile uint8_t Layer2[][3];
 volatile KeyObject keystamp[200];
 volatile ringBuff r_stmp = {};
 volatile uint8_t r__usbEN = 1;
+volatile uint8_t *current_Layer;
 void keyboard_hander()
 {
     readkey();
@@ -16,6 +18,7 @@ void init_keyboard(uint8_t i_usbEN)
     r_stmp.head = 0;
     r_stmp.tail = 0;
     r__usbEN = i_usbEN;
+    change_layer(&current_Layer , 0XF0);
 }
 
 void readkey()
@@ -127,11 +130,35 @@ uint32_t backward_search(uint32_t start)
     return r_back;
     
 }
+uint8_t change_layer(volatile uint8_t **nextLayer,uint8_t key_char)
+{
+    const uint32_t LayerPointerAddress[18] = {(uint32_t)Layer1,(uint32_t)Layer2};
+    volatile uint32_t r_tmp = 0;
+    if(key_char < 0xF0)
+        return 0;
+    key_char -= 0xF0;
+    if(key_char >= 15)
+        key_char = 15;
+    if(key_char)
+        kb_change_RGB(0,200,0);
+    else
+        kb_change_RGB(200,0,0);
+    *nextLayer = (volatile uint8_t *)LayerPointerAddress[key_char]; 
+    if(*nextLayer == 0)
+        *nextLayer = (volatile uint8_t *)LayerPointerAddress[0];
+    r_tmp = (uint32_t)nextLayer;
+    r_tmp = (uint32_t)*nextLayer;
+    r_tmp = (uint32_t)**nextLayer;
+    return 1;
+}
 void key_translate()
 {
     static volatile uint64_t t_delay = 0;
     uint8_t r_next = 0;
     static volatile uint32_t r_tmp =0;
+    if(t_delay == 0)
+    {
+    }
     if(t_delay > time_us_64())
         return;
     t_delay = time_us_64() + 5;
@@ -142,7 +169,8 @@ void key_translate()
     if(keystamp[r_stmp.tail].stat == kb_RELEASE_KEY)
     {
         r_tmp = backward_search(r_stmp.tail);
-        write_on_keyboard(keystamp[r_tmp].charValue,kb_RELEASE_KEY);
+        if(keystamp[r_tmp].charValue <= 0xF0)
+            write_on_keyboard(keystamp[r_tmp].charValue,kb_RELEASE_KEY);
         ringbuff_tail_plus_one(&r_stmp);
         return;
     }
@@ -154,26 +182,33 @@ void key_translate()
     }
     if((r_next == r_stmp.head) && ((keystamp[r_stmp.tail].t_time + LONG_PRESS_TIME) < time_us_64()))
     {
-        keystamp[r_stmp.tail].charValue = get_char_from_layer(Layer1,keystamp[r_stmp.tail].keyvalue,LONG_PRESS);
+        keystamp[r_stmp.tail].charValue = get_char_from_layer(current_Layer,keystamp[r_stmp.tail].keyvalue,LONG_PRESS);
         if(keystamp[r_stmp.tail].charValue == 0)
-            keystamp[r_stmp.tail].charValue = get_char_from_layer(Layer1,keystamp[r_stmp.tail].keyvalue,NORMAL_PRESS);
-        write_on_keyboard(keystamp[r_stmp.tail].charValue,kb_PRESS_KEY);
+            keystamp[r_stmp.tail].charValue = get_char_from_layer(current_Layer,keystamp[r_stmp.tail].keyvalue,NORMAL_PRESS);
+        if(change_layer(&current_Layer,keystamp[r_stmp.tail].charValue) == 0)
+            write_on_keyboard(keystamp[r_stmp.tail].charValue,kb_PRESS_KEY);
         ringbuff_tail_plus_one(&r_stmp);
         return;
     }
     if(r_next != r_stmp.head)
     {
-        keystamp[r_stmp.tail].charValue = get_char_from_layer(Layer1,keystamp[r_stmp.tail].keyvalue,NORMAL_PRESS);
-        write_on_keyboard(keystamp[r_stmp.tail].charValue,kb_PRESS_KEY);
+        keystamp[r_stmp.tail].charValue = get_char_from_layer(current_Layer,keystamp[r_stmp.tail].keyvalue,NORMAL_PRESS);
+        if(change_layer(&current_Layer,keystamp[r_stmp.tail].charValue) == 0)
+            write_on_keyboard(keystamp[r_stmp.tail].charValue,kb_PRESS_KEY);
         ringbuff_tail_plus_one(&r_stmp);
         return;
     }
     return;
 }
 
-uint8_t get_char_from_layer(volatile uint8_t i_layer[][3],uint8_t i_key,uint8_t i_method)
+uint8_t get_char_from_layer(volatile uint8_t *ptr,uint8_t i_key,uint8_t i_method)
 {
     uint8_t r_ret = 0;
+    volatile uint8_t (*i_layer)[3];
+    volatile uint32_t i_tmp = 0;
+    i_layer = (uint8_t (*)[3])ptr;
+    i_tmp =(uint32_t)ptr;
+    i_tmp = (uint32_t)Layer1;
     for(uint8_t i=0;i<(Keys_Count * 2);i++)
     {
         if(i_layer[i][0] != i_key)
