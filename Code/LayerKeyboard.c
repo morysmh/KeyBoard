@@ -20,7 +20,7 @@ volatile uint16_t Layer1[Keys_Count*2+1][2] =
 {HID_KEY_X,0},
 {HID_KEY_Z,0},
 {HID_KEY_TAB,0},
-{HID_KEY_SPACE,Software_Layer2},
+{HID_KEY_SPACE,Software_Press_Layer2},
 {HID_KEY_ESCAPE,0},
 {HID_KEY_Y,0},
 {HID_KEY_U,HID_KEY_SHIFT_LEFT},
@@ -37,7 +37,7 @@ volatile uint16_t Layer1[Keys_Count*2+1][2] =
 {HID_KEY_COMMA,0},
 {HID_KEY_PERIOD,0},
 {HID_KEY_SLASH,0},
-{HID_KEY_ENTER,Software_Layer3},
+{HID_KEY_ENTER,Software_Press_Layer3},
 {HID_KEY_BACKSPACE,0},
 };
 volatile uint16_t Layer2[Keys_Count*2+1][2] = 

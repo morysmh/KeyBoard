@@ -4,7 +4,7 @@
 extern volatile uint16_t Layer1[][2];
 extern volatile uint16_t Layer2[][2];
 extern volatile uint16_t Layer3[][2];
-volatile KeyObject keystamp[200];
+volatile KeyObject keystamp[512];
 volatile ringBuff r_stmp = {};
 volatile uint8_t r__usbEN = 1;
 volatile uint16_t *current_Layer;
@@ -15,11 +15,11 @@ void keyboard_hander()
 }
 void init_keyboard(uint8_t i_usbEN)
 {
-    r_stmp.max_size = 190;
+    r_stmp.max_size = 500;
     r_stmp.head = 0;
     r_stmp.tail = 0;
     r__usbEN = i_usbEN;
-    change_layer(&current_Layer , 0XF0);
+    change_layer(&current_Layer , 0XF0,kb_PRESS_KEY);
 }
 
 void readkey()
@@ -131,13 +131,27 @@ uint32_t backward_search(uint32_t start)
     return r_back;
     
 }
-uint8_t change_layer(volatile uint16_t **nextLayer,uint16_t key_char)
+uint8_t change_layer(volatile uint16_t **nextLayer,uint16_t key_char,uint8_t PressOrRelease)
 {
     const uint32_t LayerPointerAddress[18] = {(uint32_t)Layer1,(uint32_t)Layer2,(uint32_t)Layer3};
     volatile uint32_t r_tmp = 0;
+    static volatile uint8_t until_release = 0;
+    volatile uint16_t i_tmp = key_char;
     if(key_char < 0xF0)
         return 0;
     key_char -= 0xF0;
+    if((PressOrRelease == kb_RELEASE_KEY) && (until_release == 0))
+        return 0;
+    if((until_release == 1) && (PressOrRelease == kb_RELEASE_KEY))
+    {
+        key_char = 0;
+        until_release = 0;
+    }
+    if(key_char > 15)
+    {
+        until_release = 1;
+        key_char -= 16;
+    }
     if(key_char >= 15)
         key_char = 15;
     if(key_char == 0)
@@ -157,7 +171,7 @@ uint8_t change_layer(volatile uint16_t **nextLayer,uint16_t key_char)
 void key_translate()
 {
     static volatile uint64_t t_delay = 0;
-    uint8_t r_next = 0;
+    uint16_t r_next = 0;
     static volatile uint32_t r_tmp =0;
     if(t_delay == 0)
     {
@@ -172,8 +186,10 @@ void key_translate()
     if(keystamp[r_stmp.tail].stat == kb_RELEASE_KEY)
     {
         r_tmp = backward_search(r_stmp.tail);
-        if(keystamp[r_tmp].charValue <= 0xF0)
+        if(keystamp[r_tmp].charValue < 0xF0)
             write_on_keyboard(keystamp[r_tmp].charValue,kb_RELEASE_KEY);
+        else if (keystamp[r_tmp].charValue >= 0xF0)
+            change_layer(&current_Layer,keystamp[r_tmp].charValue,kb_RELEASE_KEY);
         ringbuff_tail_plus_one(&r_stmp);
         return;
     }
@@ -188,7 +204,7 @@ void key_translate()
         keystamp[r_stmp.tail].charValue = get_char_from_layer(current_Layer,keystamp[r_stmp.tail].keyvalue,LONG_PRESS);
         if(keystamp[r_stmp.tail].charValue == 0)
             keystamp[r_stmp.tail].charValue = get_char_from_layer(current_Layer,keystamp[r_stmp.tail].keyvalue,NORMAL_PRESS);
-        if(change_layer(&current_Layer,keystamp[r_stmp.tail].charValue) == 0)
+        if(change_layer(&current_Layer,keystamp[r_stmp.tail].charValue,kb_PRESS_KEY) == 0)
             write_on_keyboard(keystamp[r_stmp.tail].charValue,kb_PRESS_KEY);
         ringbuff_tail_plus_one(&r_stmp);
         return;
@@ -196,7 +212,7 @@ void key_translate()
     if(r_next != r_stmp.head)
     {
         keystamp[r_stmp.tail].charValue = get_char_from_layer(current_Layer,keystamp[r_stmp.tail].keyvalue,NORMAL_PRESS);
-        if(change_layer(&current_Layer,keystamp[r_stmp.tail].charValue) == 0)
+        if(change_layer(&current_Layer,keystamp[r_stmp.tail].charValue,kb_PRESS_KEY) == 0)
             write_on_keyboard(keystamp[r_stmp.tail].charValue,kb_PRESS_KEY);
         ringbuff_tail_plus_one(&r_stmp);
         return;
@@ -204,9 +220,9 @@ void key_translate()
     return;
 }
 
-uint8_t get_char_from_layer(volatile uint16_t *ptr,uint16_t i_key,uint8_t i_method)
+uint16_t get_char_from_layer(volatile uint16_t *ptr,uint16_t i_key,uint8_t i_method)
 {
-    uint8_t r_ret = 0;
+    uint16_t r_ret = 0;
     volatile uint16_t (*i_layer)[2];
     i_layer = (volatile uint16_t (*)[2])ptr;
     if(i_key >= 0xF0) //TODO Use proper Handeling of High Values

@@ -75,4 +75,21 @@ typedef struct
 #define Software_Layer15   0xFE
 #define Software_Layer16   0xFF
 
+#define Software_Press_Layer1    0x100
+#define Software_Press_Layer2    0x101
+#define Software_Press_Layer3    0x102
+#define Software_Press_Layer4    0x103
+#define Software_Press_Layer5    0x104
+#define Software_Press_Layer6    0x105
+#define Software_Press_Layer7    0x106
+#define Software_Press_Layer8    0x107
+#define Software_Press_Layer9    0x108
+#define Software_Press_Layer10   0x109
+#define Software_Press_Layer11   0x10A
+#define Software_Press_Layer12   0x10B
+#define Software_Press_Layer13   0x10C
+#define Software_Press_Layer14   0x10D
+#define Software_Press_Layer15   0x10E
+#define Software_Press_Layer16   0x10F
+
 #endif

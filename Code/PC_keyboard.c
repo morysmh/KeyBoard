@@ -109,7 +109,7 @@ void write_on_keyboard(uint8_t i_key,uint8_t i_press_or_release)
   static volatile uint8_t r_allKey[10] = {};
   static volatile uint32_t r_tmp = 0;
   static volatile uint8_t r_indx = 0;
-
+  //return;
   if((i_press_or_release != kb_RELEASE_ALL) && (i_key == 0))
     return;
   if(i_press_or_release == kb_RELEASE_KEY)
