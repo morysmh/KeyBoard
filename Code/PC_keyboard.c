@@ -56,6 +56,8 @@ uint8_t deletefromString(uint8_t *i_data,uint8_t len,uint8_t key)
 {
   uint8_t last_data_index = 0;
   uint8_t r_ret = 0;
+  if((key == 0) || (i_data == 0))
+    return 0;
   for(uint i=0;i<len;i++)
   {
     if(i_data[i] == key)
@@ -90,7 +92,7 @@ uint8_t check_if_system_key(uint8_t i_key)
   uint8_t i = 0;
   for(uint i = 0;i<(sizeof(controll_keys)/sizeof(uint8_t));i++)
   {
-    if(i_key == controll_keys[i])
+    if((i_key == controll_keys[i]) && (i_key != 0))
       return 1;
   }
   return 0;
@@ -107,6 +109,9 @@ void write_on_keyboard(uint8_t i_key,uint8_t i_press_or_release)
   static volatile uint8_t r_allKey[10] = {};
   static volatile uint32_t r_tmp = 0;
   static volatile uint8_t r_indx = 0;
+
+  if((i_press_or_release != kb_RELEASE_ALL) && (i_key == 0))
+    return;
   if(i_press_or_release == kb_RELEASE_KEY)
   {
     deletefromString((uint8_t *)r_allKey,c_max_key,i_key);
@@ -125,6 +130,7 @@ void write_on_keyboard(uint8_t i_key,uint8_t i_press_or_release)
     for(uint i = 0;i<c_max_key;i++)
       r_allKey[0] = HID_KEY_NONE;
   }
+
   for(uint i = 0;i<6;i++)
     sendBuffer[rb_send.head][i] = r_allKey[i];
   ringbuff_plus_one_head(&rb_send);

@@ -36,6 +36,8 @@
 #define Pin_AD3     28
 
 #define Keys_Count  18
+#define Keys_Total  36
+
 
 typedef struct
 {

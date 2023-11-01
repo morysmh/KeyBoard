@@ -1,12 +1,13 @@
 #include "keyboard.h"
 #include "PC_keyboard.h"
 
-extern volatile uint8_t Layer1[][3];
-extern volatile uint8_t Layer2[][3];
+extern volatile uint16_t Layer1[][2];
+extern volatile uint16_t Layer2[][2];
+extern volatile uint16_t Layer3[][2];
 volatile KeyObject keystamp[200];
 volatile ringBuff r_stmp = {};
 volatile uint8_t r__usbEN = 1;
-volatile uint8_t *current_Layer;
+volatile uint16_t *current_Layer;
 void keyboard_hander()
 {
     readkey();
@@ -130,22 +131,24 @@ uint32_t backward_search(uint32_t start)
     return r_back;
     
 }
-uint8_t change_layer(volatile uint8_t **nextLayer,uint8_t key_char)
+uint8_t change_layer(volatile uint16_t **nextLayer,uint16_t key_char)
 {
-    const uint32_t LayerPointerAddress[18] = {(uint32_t)Layer1,(uint32_t)Layer2};
+    const uint32_t LayerPointerAddress[18] = {(uint32_t)Layer1,(uint32_t)Layer2,(uint32_t)Layer3};
     volatile uint32_t r_tmp = 0;
     if(key_char < 0xF0)
         return 0;
     key_char -= 0xF0;
     if(key_char >= 15)
         key_char = 15;
-    if(key_char)
-        kb_change_RGB(0,200,0);
-    else
+    if(key_char == 0)
         kb_change_RGB(200,0,0);
-    *nextLayer = (volatile uint8_t *)LayerPointerAddress[key_char]; 
+    if(key_char == 1)
+        kb_change_RGB(0,200,0);
+    if(key_char == 2)
+        kb_change_RGB(0,0,200);
+    *nextLayer = (volatile uint16_t *)LayerPointerAddress[key_char]; 
     if(*nextLayer == 0)
-        *nextLayer = (volatile uint8_t *)LayerPointerAddress[0];
+        *nextLayer = (volatile uint16_t *)LayerPointerAddress[0];
     r_tmp = (uint32_t)nextLayer;
     r_tmp = (uint32_t)*nextLayer;
     r_tmp = (uint32_t)**nextLayer;
@@ -201,28 +204,25 @@ void key_translate()
     return;
 }
 
-uint8_t get_char_from_layer(volatile uint8_t *ptr,uint8_t i_key,uint8_t i_method)
+uint8_t get_char_from_layer(volatile uint16_t *ptr,uint16_t i_key,uint8_t i_method)
 {
     uint8_t r_ret = 0;
-    volatile uint8_t (*i_layer)[3];
-    volatile uint32_t i_tmp = 0;
-    i_layer = (uint8_t (*)[3])ptr;
-    i_tmp =(uint32_t)ptr;
-    i_tmp = (uint32_t)Layer1;
-    for(uint8_t i=0;i<(Keys_Count * 2);i++)
-    {
-        if(i_layer[i][0] != i_key)
-            continue;
-        r_ret = i_layer[i][1];
-        if(i_method == LONG_PRESS)
-            r_ret = i_layer[i][2];
-    }
+    volatile uint16_t (*i_layer)[2];
+    i_layer = (volatile uint16_t (*)[2])ptr;
+    if(i_key >= 0xF0) //TODO Use proper Handeling of High Values
+        return 0;
+    if(i_key)
+        i_key--;
+    if (i_key < Keys_Total)
+    r_ret = i_layer[i_key][0];
+    if(i_method == LONG_PRESS)
+        r_ret = i_layer[i_key][1];
     return r_ret;
 }
 void ringbuff_plus_one_head(volatile ringBuff * i_ring){i_ring->head = ((i_ring->head > i_ring->max_size)?0:i_ring->head + 1);}
 void ringbuff_tail_plus_one(volatile ringBuff * i_ring){i_ring->tail = ((i_ring->tail > i_ring->max_size)?0:i_ring->tail + 1);}
 
-uint8_t correspondKey(uint8_t key)
+uint16_t correspondKey(uint8_t key)
 {
     uint8_t r_otherHand = 0, r_ret = 0;
     const int8_t c_keys[Keys_Count + 2][2]= 
