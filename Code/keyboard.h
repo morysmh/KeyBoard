@@ -9,7 +9,7 @@
 #define LONG_PRESS      1
 #define DOUBLE_PRESS    2
 
-#define LONG_PRESS_TIME  550000
+#define LONG_PRESS_TIME  250000
 
 typedef struct
 {

@@ -90,7 +90,7 @@ volatile uint16_t Layer3[Keys_Count*2+1][2] =
 {HID_KEY_6,0},
 {HID_KEY_5,0},
 {HID_KEY_4,0},
-{HID_KEY_SEMICOLON,0},
+{HID_KEY_GRAVE,0},
 {HID_KEY_BACKSLASH,0},
 {HID_KEY_3,0},
 {HID_KEY_2,0},
