@@ -27,7 +27,7 @@
 
 enum
 {
-  REPORT_ID_KEYBOARD = 1,
+  REPORT_ID_KEYBOARD,
   REPORT_ID_COUNT
 };
 

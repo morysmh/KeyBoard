@@ -4,6 +4,7 @@
 extern volatile uint16_t Layer1[][2];
 extern volatile uint16_t Layer2[][2];
 extern volatile uint16_t Layer3[][2];
+extern volatile uint16_t Layer4[][2];
 volatile KeyObject keystamp[512];
 volatile ringBuff r_stmp = {};
 volatile uint8_t r__usbEN = 1;
@@ -133,7 +134,7 @@ uint32_t backward_search(uint32_t start)
 }
 uint8_t change_layer(volatile uint16_t **nextLayer,uint16_t key_char,uint8_t PressOrRelease)
 {
-    const uint32_t LayerPointerAddress[18] = {(uint32_t)Layer1,(uint32_t)Layer2,(uint32_t)Layer3};
+    const uint32_t LayerPointerAddress[18] = {(uint32_t)Layer1,(uint32_t)Layer2,(uint32_t)Layer3,(uint32_t)Layer4};
     volatile uint32_t r_tmp = 0;
     static volatile uint8_t until_release = 0;
     volatile uint16_t i_tmp = key_char;
@@ -160,6 +161,8 @@ uint8_t change_layer(volatile uint16_t **nextLayer,uint16_t key_char,uint8_t Pre
         kb_change_RGB(0,200,0);
     if(key_char == 2)
         kb_change_RGB(0,0,200);
+    if(key_char == 3)
+        kb_change_RGB(200,100,200);
     *nextLayer = (volatile uint16_t *)LayerPointerAddress[key_char]; 
     if(*nextLayer == 0)
         *nextLayer = (volatile uint16_t *)LayerPointerAddress[0];
