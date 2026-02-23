@@ -51,7 +51,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       LT(4,KC_TAB),
       LT(3,KC_ENT),
       LT(2,KC_BSPC),
-      LT(5,KC_NO)
+      LT(5,KC_ASTR)
     ),
 [1] = LAYOUT_mori_4x6(
       KC_EXLM,
@@ -134,7 +134,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       KC_7,
       KC_8,
       KC_9,
-      KC_INT1,
+      KC_BSLS,
       KC_PSLS,
       RSFT_T(KC_P7),
       RCTL_T(KC_P8),
