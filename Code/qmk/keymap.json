@@ -42,7 +42,7 @@
       "LT(4,KC_TAB)",
       "LT(3,KC_ENT)",
       "LT(2,KC_BSPC)",
-      "LT(5,KC_NO)"
+      "LT(5,KC_ASTR)"
     ],
     [
       "KC_EXLM",
