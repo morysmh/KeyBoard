@@ -1,0 +1,116 @@
+{
+    "manufacturer": "morysmh",
+    "keyboard_name": "mori36",
+    "maintainer": "morysmh",
+    "url": "",
+    "bootloader": "rp2040",
+    "processor": "RP2040",
+    "usb": {
+        "device_version": "1.0.0",
+        "pid": "0xC2AB",
+        "vid": "0x3939",
+        "suspend_wakeup_delay": 200
+    },
+    "qmk": {
+        "locking": {
+            "enabled": true,
+            "resync": true
+        }
+    },
+    "features": {
+        "bootmagic": true,
+        "extrakey": true,
+        "mousekey": true,
+        "nkro": true
+    },
+    "matrix_pins": {
+        "direct": [
+           ["GP19",  "GP20",  "GP21",  "GP22",  "GP26"],
+           ["GP14", "GP15", "GP16", "GP17", "GP18"],
+           ["GP9", "GP10", "GP11", "GP12", "GP13"],
+           ["GP8", "GP7", "GP6", null,   null]
+        ]
+    },
+    "bootmagic": {
+        "enabled": true,
+        "matrix": [ 0, 1 ]
+    },
+    "split": {
+        "enabled": true,
+        "bootmagic": {
+            "matrix": [4, 1]
+        },
+        "matrix_pins": {
+            "right": {
+                "direct": [
+           ["GP26",  "GP22",  "GP21",  "GP20",  "GP19"],
+           ["GP18", "GP17", "GP16", "GP15", "GP14"],
+           ["GP13", "GP12", "GP11", "GP10", "GP9"],
+           ["GP6", "GP7", "GP8", null,   null]
+                ]
+            }
+        },
+        "serial": {
+            "driver": "vendor"
+        },
+        "transport": {
+            "sync": {
+                "matrix_state": true
+            },
+            "watchdog": true
+
+        },
+        "usb_detect": {
+            "timeout": 500
+        }
+    },
+    "debounce": 30,
+    "tapping": {
+        "toggle": 1
+    },
+    "layouts": {
+        "LAYOUT_mori_4x6": {
+            "layout": [
+                {"label": "L01", "matrix": [0, 0], "x": 0, "y": 0},
+                {"label": "L02", "matrix": [0, 1], "x": 1, "y": 0},
+                {"label": "L03", "matrix": [0, 2], "x": 2, "y": 0},
+                {"label": "L04", "matrix": [0, 3], "x": 3, "y": 0},
+                {"label": "L05", "matrix": [0, 4], "x": 4, "y": 0},
+                {"label": "R01", "matrix": [4, 0], "x": 5, "y": 0},
+                {"label": "R02", "matrix": [4, 1], "x": 6, "y": 0},
+                {"label": "R03", "matrix": [4, 2], "x": 7, "y": 0},
+                {"label": "R04", "matrix": [4, 3], "x": 8, "y": 0},
+                {"label": "R05", "matrix": [4, 4], "x": 9, "y": 0},
+
+                {"label": "L06", "matrix": [1, 0], "x": 0, "y": 1},
+                {"label": "L07", "matrix": [1, 1], "x": 1, "y": 1},
+                {"label": "L08", "matrix": [1, 2], "x": 2, "y": 1},
+                {"label": "L09", "matrix": [1, 3], "x": 3, "y": 1},
+                {"label": "L10", "matrix": [1, 4], "x": 4, "y": 1},
+                {"label": "R06", "matrix": [5, 0], "x": 5, "y": 1},
+                {"label": "R07", "matrix": [5, 1], "x": 6, "y": 1},
+                {"label": "R08", "matrix": [5, 2], "x": 7, "y": 1},
+                {"label": "R09", "matrix": [5, 3], "x": 8, "y": 1},
+                {"label": "R10", "matrix": [5, 4], "x": 9, "y": 1},
+
+                {"label": "L11", "matrix": [2, 0], "x": 0, "y": 2},
+                {"label": "L12", "matrix": [2, 1], "x": 1, "y": 2},
+                {"label": "L13", "matrix": [2, 2], "x": 2, "y": 2},
+                {"label": "L14", "matrix": [2, 3], "x": 3, "y": 2},
+                {"label": "L15", "matrix": [2, 4], "x": 4, "y": 2},
+                {"label": "R11", "matrix": [6, 0], "x": 5, "y": 2},
+                {"label": "R12", "matrix": [6, 1], "x": 6, "y": 2},
+                {"label": "R13", "matrix": [6, 2], "x": 7, "y": 2},
+                {"label": "R14", "matrix": [6, 3], "x": 8, "y": 2},
+                {"label": "R15", "matrix": [6, 4], "x": 9, "y": 2},
+
+                {"label": "L16", "matrix": [3, 0], "x": 3, "y": 3},
+                {"label": "L17", "matrix": [3, 1], "x": 4, "y": 3},
+                {"label": "L18", "matrix": [3, 2], "x": 5, "y": 3},
+                {"label": "R16", "matrix": [7, 0], "x": 6, "y": 3},
+                {"label": "R17", "matrix": [7, 1], "x": 7, "y": 3},
+                {"label": "R18", "matrix": [7, 2], "x": 8, "y": 3}
+            ]
+        }
+    }
+}
